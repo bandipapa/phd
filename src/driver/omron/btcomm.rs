@@ -26,6 +26,7 @@ pub struct BTCommCmdResp {
 
 impl BTComm {
     // TODO: Implement retry and timeout for bt operations.
+    // TODO: connect timeout/pair timeout.
 
     pub async fn new(device: &Device, service_uuid: &Uuid, tx_char_uuids: &[&Uuid], rx_char_uuids: &[&Uuid], cmd_chunk_size: usize) -> btutil::Result<Self> {
         assert!(!tx_char_uuids.is_empty() && !rx_char_uuids.is_empty());

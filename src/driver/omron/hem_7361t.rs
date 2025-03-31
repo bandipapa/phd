@@ -186,28 +186,31 @@ impl DriverImpl {
                     let data_len = data.len();
 
                     if comm.read_eeprom(addr, &mut data, data_len.try_into().unwrap()).await? {
-                        let year = YEAR + (data[3] & 0x3f) as u16;
-                        let month = (data[5] >> 2) & 0x0f;
-                        let day = ((data[4] >> 5) & 0x07) | ((data[5] & 0x03) << 3);
-                        let hour = data[4] & 0x1f;
-                        let min = ((data[6] >> 6) & 0x03) | ((data[7] & 0x0f) << 2);
                         let sec = data[6] & 0x3f;
-                        let bpm = data[2];
-                        let dia = data[1];
-                        let sys = 25 + data[0];
-                        let mov = ((data[5] >> 7) & 0x01) == 0x01;
-                        let ihb = ((data[5] >> 6) & 0x01) == 0x01;
 
-                        let ts = TimeUtil::get_ts(&self.config.tz, year, month, day, hour, min, sec).ok_or(btutil::Error::General("Unable to make ts".into()))?;
-                        let mut record = DbRecord::new(ts);
-                        record.add_tag("user", &format!("{}", user + 1));
-                        record.add_field("bpm", DbFieldValue::Integer(bpm.into()));
-                        record.add_field("dia", DbFieldValue::Integer(dia.into()));
-                        record.add_field("sys", DbFieldValue::Integer(sys.into()));
-                        record.add_field("mov", DbFieldValue::Bool(mov));
-                        record.add_field("ihb", DbFieldValue::Bool(ihb));
+			if sec != 63 { // Discard uninitialized/time-desynced data.
+                            let year = YEAR + (data[3] & 0x3f) as u16;
+			    let month = (data[5] >> 2) & 0x0f;
+                            let day = ((data[4] >> 5) & 0x07) | ((data[5] & 0x03) << 3);
+                       	    let hour = data[4] & 0x1f;
+                            let min = ((data[6] >> 6) & 0x03) | ((data[7] & 0x0f) << 2);
+                            let bpm = data[2];
+                            let dia = data[1];
+                            let sys = 25 + data[0];
+                            let mov = ((data[5] >> 7) & 0x01) == 0x01;
+                            let ihb = ((data[5] >> 6) & 0x01) == 0x01;
+
+                            let ts = TimeUtil::get_ts(&self.config.tz, year, month, day, hour, min, sec).ok_or(btutil::Error::General("Unable to make ts".into()))?;
+                            let mut record = DbRecord::new(ts);
+                            record.add_tag("user", &format!("{}", user + 1));
+                            record.add_field("bpm", DbFieldValue::Integer(bpm.into()));
+                            record.add_field("dia", DbFieldValue::Integer(dia.into()));
+                            record.add_field("sys", DbFieldValue::Integer(sys.into()));
+                            record.add_field("mov", DbFieldValue::Bool(mov));
+                            record.add_field("ihb", DbFieldValue::Bool(ihb));
                         
-                        records.push(record);
+			    records.push(record);
+			}
                     }
 
                     addr += REC_LEN as u16;

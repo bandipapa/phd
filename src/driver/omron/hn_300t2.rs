@@ -128,14 +128,15 @@ impl DriverImpl {
 
             if comm.read_eeprom(addr, &mut data, data_len.try_into().unwrap()).await? {
                 let raw_weight = (data[0] as u16) << 8 | (data[1] as u16);
-                if raw_weight != 0xffff {
+                let sec = data[7];
+
+                if raw_weight != 0xffff && sec != 63 { // Discard uninitialized/time-desynced data.
                     let weight = (raw_weight as f64) / 20.0; // Unit reports weight in 50g.
                     let year = YEAR + (data[2] as u16);
                     let month = data[3];
                     let day = data[4];
                     let hour = data[5];
                     let min = data[6];
-                    let sec = data[7];
 
                     let ts = TimeUtil::get_ts(&self.config.tz, year, month, day, hour, min, sec).ok_or(btutil::Error::General("Unable to make ts".into()))?;
                     let mut record = DbRecord::new(ts);

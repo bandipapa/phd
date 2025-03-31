@@ -9,7 +9,7 @@ This is an attempt to read measurements from healthcare units and send them to I
 | Device          | Type                   |
 |-----------------|------------------------|
 | Omron HEM-7361T | Blood Pressure Monitor |
-| Omron HN-300T2  | Scale                  |
+| Omron HN-300T2  | Weight Scale           |
 
 At the moment, all the measurements are fetched, not just the unread ones.
 
@@ -59,7 +59,7 @@ db: # InfluxDB connection settings
 
 ## Pair with device
 
-Devices in config.yaml needs to be paired first, e.g.:
+Devices in config.yaml needs to be paired first. Put your device in pairing mode (see instruction manual) and execute:
 
 > cargo run -- -c config.yaml -p my_bpm
 
